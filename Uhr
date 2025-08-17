@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vita Plan – Datejust Uhr 305×288</title>
+<style>
+  body {margin:0; background:#0b0f17; display:flex; justify-content:center; align-items:center;}
+  .clock-wrap{width:305px; height:288px;}
+  svg{width:100%; height:100%;}
+  .date-window { font-family: Arial, sans-serif; font-weight: 800; letter-spacing: 0px; }
+</style>
+</head>
+<body>
+  <div class="clock-wrap" aria-label="Analoge Uhr im Datejust-Stil">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="bezelGrad" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#fff8df" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#b08b3a"/>
+        </radialGradient>
+        <radialGradient id="dialGrad" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#0a0a0a"/>
+          <stop offset="100%" stop-color="#111111"/>
+        </radialGradient>
+        <filter id="handShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity=".6"/>
+        </filter>
+      </defs>
+
+      <!-- Bezel + Dial -->
+      <circle cx="500" cy="500" r="480" fill="url(#bezelGrad)" stroke="#caa84d" stroke-width="8"/>
+      <circle cx="500" cy="500" r="460" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>
+      <circle cx="500" cy="500" r="420" fill="url(#dialGrad)"/>
+
+      <!-- Indizes -->
+      <g id="indices"></g>
+
+      <!-- Branding (in Bezel-Gold) -->
+      <text id="brandTop" x="500" y="320" text-anchor="middle" fill="#b08b3a" font-weight="700" font-size="60">Vita Plan GmbH</text>
+
+      <!-- Wochentag in Bezel-Gold, gleiche Schriftgröße wie Vita Plan -->
+      <text id="weekDay" x="500" y="740" text-anchor="middle" fill="#b08b3a" font-weight="700" font-size="60">---</text>
+
+      <!-- Datumsfenster: kleiner, so dass Zahl genau reinpasst -->
+      <g id="dateGroup" transform="translate(660,500)">
+        <rect x="-54" y="-38" width="108" height="76" rx="10" ry="10" fill="white" stroke="#333" stroke-width="4"/>
+        <text id="dateText" x="0" y="0" dominant-baseline="middle" text-anchor="middle" fill="#e10600" font-weight="700" font-size="60" class="date-window">--</text>
+      </g>
+
+      <!-- Zeiger angepasst -->
+      <g id="hands" filter="url(#handShadow)">
+        <!-- Stundenzeiger: 1/3 schlanker -->
+        <g id="hourHand"><rect x="486.5" y="330" width="27" height="200" rx="13.5" fill="#d4af37"/></g>
+        <!-- Minutenzeiger: Hälfte schlanker -->
+        <g id="minuteHand"><rect x="485" y="170" width="30" height="350" rx="15" fill="#e5e7eb"/><!-- thinner minute --></g>
+        <!-- Sekundenzeiger unverändert -->
+        <g id="secondHand"><rect x="497" y="140" width="12" height="380" rx="6" fill="#e74c3c"/><circle cx="500" cy="150" r="16" fill="#e74c3c"/></g>
+      </g>
+
+      <!-- Zentrumskappe -->
+      <circle cx="500" cy="500" r="20" fill="#d4af37"/>
+    </svg>
+  </div>
+
+<script>
+  // Datejust-Indices mit kräftigerer Darstellung
+  const indices = document.getElementById('indices');
+  function buildIndices(){
+    indices.innerHTML='';
+    for(let i=0;i<12;i++){
+      const angle = (i/12)*2*Math.PI;
+      const rOuter = 370;
+      const rInner = 315;
+      const x1 = 500 + rInner * Math.sin(angle);
+      const y1 = 500 - rInner * Math.cos(angle);
+      const x2 = 500 + rOuter * Math.sin(angle);
+      const y2 = 500 - rOuter * Math.cos(angle);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1);line.setAttribute('y1',y1);line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+      line.setAttribute('stroke','#e6e6e6');line.setAttribute('stroke-width',22);line.setAttribute('stroke-linecap','round');
+      indices.appendChild(line);
+      for(let j=1;j<5;j++){
+        const a = angle + (j*(2*Math.PI)/(12*5));
+        const rx1 = 500 + (rInner+24) * Math.sin(a);
+        const ry1 = 500 - (rInner+24) * Math.cos(a);
+        const rx2 = 500 + (rOuter-10) * Math.sin(a);
+        const ry2 = 500 - (rOuter-10) * Math.cos(a);
+        const tline = document.createElementNS('http://www.w3.org/2000/svg','line');
+        tline.setAttribute('x1',rx1);tline.setAttribute('y1',ry1);tline.setAttribute('x2',rx2);tline.setAttribute('y2',ry2);
+        tline.setAttribute('stroke','rgba(255,255,255,0.65)');tline.setAttribute('stroke-width',5);tline.setAttribute('stroke-linecap','round');
+        indices.appendChild(tline);
+      }
+    }
+  }
+  buildIndices();
+
+  // Bewegung der Zeiger (weich, mit Sekundenfeger)
+  const hourG=document.getElementById('hourHand');
+  const minuteG=document.getElementById('minuteHand');
+  const secondG=document.getElementById('secondHand');
+  const weekDayText=document.getElementById('weekDay');
+  const dateText=document.getElementById('dateText');
+
+  function updateHands(){
+    const d=new Date();
+    const ms=d.getMilliseconds();
+    const s=d.getSeconds()+ms/1000;
+    const m=d.getMinutes()+s/60;
+    const h=(d.getHours()%12)+m/60;
+    const sDeg=s*6, mDeg=m*6, hDeg=h*30;
+    hourG.setAttribute('transform',`rotate(${hDeg} 500 500)`);
+    minuteG.setAttribute('transform',`rotate(${mDeg} 500 500)`);
+    secondG.setAttribute('transform',`rotate(${sDeg} 500 500)`);
+
+    const days=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    weekDayText.textContent = days[d.getDay()];
+
+    dateText.textContent = d.getDate();
+    requestAnimationFrame(updateHands);
+  }
+  requestAnimationFrame(updateHands);
+</script>
+</body>
+</html>
